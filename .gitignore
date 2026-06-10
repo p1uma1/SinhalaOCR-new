@@ -2,7 +2,6 @@
 /dataset
 /Dataset454
 Datasets/
-outputs/
 .env
 node_modules
 frontend/dist
