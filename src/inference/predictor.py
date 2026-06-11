@@ -7,7 +7,7 @@ from PIL import Image
 from transformers import AutoTokenizer, ViTImageProcessor
 from torchvision.datasets import ImageFolder
 
-from src.data.class_labels import CLASS_LABELS_PATH, resolve_character_labels, save_class_labels
+from src.data.class_labels import CLASS_LABELS_PATH, SINHALA_CHARACTERS, resolve_character_labels, save_class_labels, folder_id_to_character
 from src.models.trocr_model import SinhalaTrOCR
 from src.models.vision_encoder import DeiTClassifier
 from src.utils.device import configure_gpu
@@ -48,6 +48,13 @@ class ModelService:
             elif self.class_folders:
                 self._character_labels = resolve_character_labels(self.class_folders)
                 save_class_labels(self.class_folders, CLASS_LABELS_FILE)
+            else:
+                # Neither JSON nor dataset directory is available.
+                # Reconstruct by simulating ImageFolder's alphabetical sort of
+                # folder names "1".."454" (the exact same sort used during training).
+                simulated_folders = sorted(str(i) for i in range(1, len(SINHALA_CHARACTERS) + 1))
+                self._character_labels = [folder_id_to_character(fid) for fid in simulated_folders]
+                save_class_labels(simulated_folders, CLASS_LABELS_FILE)
         return self._character_labels or []
 
     def status(self):
