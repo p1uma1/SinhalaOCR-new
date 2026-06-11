@@ -153,7 +153,8 @@ export function OCRStudio({ health, showToast }: OCRStudioProps) {
                 <div className="card">
                   <h3>Document page input</h3>
                   <p className="card-hint">
-                    Full page with multiple lines — we detect, crop, and OCR each line.
+                    Full page — binary mask finds line &amp; word boxes; OCR runs left-to-right
+                    with shared decoding context.
                   </p>
                   <UploadZone
                     id="document-upload"
@@ -207,6 +208,11 @@ export function OCRStudio({ health, showToast }: OCRStudioProps) {
                   <h3>
                     Line-by-line results{" "}
                     <span className="badge">{documentResult.line_count} lines</span>
+                    {documentResult.word_count != null && documentResult.word_count > 0 && (
+                      <span className="badge badge-muted">
+                        {documentResult.word_count} words
+                      </span>
+                    )}
                   </h3>
                   <div className="lines-list">
                     {documentResult.lines.map((line) => (
@@ -215,9 +221,25 @@ export function OCRStudio({ health, showToast }: OCRStudioProps) {
                           src={`data:image/png;base64,${line.image_base64}`}
                           alt={`Line ${line.index + 1}`}
                         />
-                        <div>
+                        <div className="line-body">
                           <span className="line-label">Line {line.index + 1}</span>
                           <p className="sinhala line-text">{line.text || "—"}</p>
+                          {line.words && line.words.length > 0 && (
+                            <ul className="word-list">
+                              {line.words.map((word) => (
+                                <li key={word.index} className="word-chip">
+                                  <img
+                                    src={`data:image/png;base64,${word.image_base64}`}
+                                    alt={`Word ${word.index + 1}`}
+                                    className="word-thumb"
+                                  />
+                                  <span className="sinhala word-text">
+                                    {word.text || "—"}
+                                  </span>
+                                </li>
+                              ))}
+                            </ul>
+                          )}
                         </div>
                       </article>
                     ))}
@@ -236,12 +258,13 @@ export function OCRStudio({ health, showToast }: OCRStudioProps) {
                     />
                   </div>
                   <div className="card">
-                    <h3>After preprocessing</h3>
+                    <h3>Binary mask &amp; boxes</h3>
                     <img
                       className="debug-image"
-                      src={`data:image/png;base64,${documentResult.debug.deskewed}`}
-                      alt="Deskewed document"
+                      src={`data:image/png;base64,${documentResult.debug.boxes || documentResult.debug.deskewed}`}
+                      alt="Segmentation boxes"
                     />
+                    <p className="card-hint">Green = lines, red = word boxes from binary mask</p>
                   </div>
                 </div>
               )}
@@ -297,7 +320,9 @@ export function OCRStudio({ health, showToast }: OCRStudioProps) {
                             key={`${item.label}-${index}`}
                             className={`prediction-item ${index === 0 ? "top" : ""}`}
                           >
-                            <span className="sinhala prediction-label">{item.label}</span>
+                            <span className="sinhala prediction-label">
+                              {item.character ?? item.label}
+                            </span>
                             <span className="prediction-score">{item.confidence}%</span>
                           </li>
                         ))}

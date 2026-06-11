@@ -45,5 +45,11 @@ class SinhalaTrOCR(nn.Module):
     def forward(self, pixel_values, labels=None):
         return self.model(pixel_values=pixel_values, labels=labels)
     
-    def generate(self, pixel_values, **kwargs):
+    def generate(self, pixel_values, decoder_input_ids=None, **kwargs):
+        if decoder_input_ids is not None:
+            return self.model.generate(
+                pixel_values,
+                decoder_input_ids=decoder_input_ids,
+                **kwargs,
+            )
         return self.model.generate(pixel_values, **kwargs)

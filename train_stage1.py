@@ -5,6 +5,7 @@ import torch.nn as nn
 import torch.optim as optim
 from tqdm import tqdm
 
+from src.data.class_labels import save_class_labels
 from src.dataset.char_dataset import get_char_datasets
 from src.models.vision_encoder import DeiTClassifier
 from src.utils.device import configure_gpu
@@ -29,6 +30,8 @@ def train_stage1():
     )
     num_classes = len(classes)
     print(f"Found {num_classes} classes.")
+    labels_path = save_class_labels(classes, os.path.join(output_dir, "class_labels.json"))
+    print(f"Saved class label map: {labels_path}")
 
     print("Initializing model...")
     model = DeiTClassifier(num_classes=num_classes).to(device)
